@@ -1,0 +1,277 @@
+---
+title: "Group Project"
+author: "Gahyeon"
+date: "2023-04-26"
+output: word_document
+---
+
+## Group Project
+
+Object: Explore R Package - cowplot
+Team: Gahyeon, Abhi, Gail
+Data Description:
+
+```{r}
+#Load the data
+data <- read.csv("C:/Users/withm/OneDrive/Desktop/DTSC 630 (Thur)/Group Project/World Happiness Report.csv")
+
+#Display the first 10th raw data
+head(data, 10)
+```
+
+```{r}
+#Load Library
+library(ggplot2)
+library(cowplot)
+library(grid)
+```
+
+Case 1) Combine two plots into a single grid
+
+```{r}
+# Prepare data
+data_clean <- na.omit(data)
+data_clean <- data[is.finite(data$`Healthy.Life.Expectancy.At.Birth`),]
+
+# Plot 1: Scatterplot between Life Ladder and Log GDP Per Capita
+plot1 <- ggplot(data, aes(x = `Log.GDP.Per.Capita`, y = `Life.Ladder`, color = `Regional.Indicator`)) +
+  geom_point() +
+  labs(x = "Log GDP Per Capita", y = "Life Ladder") +
+  labs(title = "Scatterplot of Life Ladder vs. Log GDP Per Capita")
+print(plot1)
+
+# Plot 2: Boxplot of Healthy Life Expectancy at Birth by Region
+plot2 <- ggplot(data, aes(x = `Regional.Indicator`, y = `Healthy.Life.Expectancy.At.Birth`, fill = `Regional.Indicator`)) +
+  geom_boxplot() +
+  labs(x = "Region", y = "Healthy Life Expectancy at Birth", fill = "Region") +
+  theme_cowplot(12) +
+  labs(title = "Boxplot of Healthy Life Expectancy at Birth by Region")
+print(plot2)
+
+# Combine the two plots using cowplot
+combined_plot <- plot_grid(plot1, plot2, ncol = 2, align = "v", axis = "tb", widths = c(3, 2)) +
+  labs(title = "Combined Plot")
+
+# Set the size of the combined plot
+theme_set(theme_cowplot())
+options(repr.plot.width = 10, repr.plot.height = 5)
+
+# Print the combined plot
+print(combined_plot)
+
+```
+
+
+Case 2) Adding annotations to a plot 
+
+```{r}
+p1 <- ggplot(df, aes(Log.GDP.Per.Capita, Positive.Affect)) + geom_point(colour = "cyan3") + 
+  background_grid(minor='none')+
+  labs(x = "Log GDP Per Capita", y = "Postive Affect") +
+  labs(title = "Positive Affect vs Log GDP per Capita")
+ggdraw(add_sub(p1, "This is an annotation.\nAnnotations can span multiple lines as need."))
+# You can also do this repeatedly.
+p2 <- add_sub(p1, "This formula has no relevance here:", y = 0, vjust = 0)
+p3 <- add_sub(p2, expression(paste(a^2+b^2, " = ", c^2)))
+ggdraw(p3)
+# Finally, it is possible to move the annotation inside of the plot if desired.
+ggdraw(add_sub(p1, "Annotation inside plot", vpadding=grid::unit(0, "lines"),y = 6, x = 0.03, hjust = 0))
+```
+
+
+Case 3) Adding the background grid in a ggplot2 plot
+
+```{r}
+# the plot without a background grid
+ggplot(df, aes(Life.Ladder, Positive.Affect)) +
+  geom_point(colour = "darkseagreen3") 
+#using cowplot to add a background grid
+ggplot(df, aes(Life.Ladder, Positive.Affect)) +
+  geom_point(colour = "darkseagreen3") +
+  theme_half_open() +
+  background_grid()
+```
+
+
+Case 4) Adding label to the figure
+
+```{r}
+p_1 <- ggplot(df, aes(Life.Ladder, Positive.Affect)) +
+  geom_point(colour = "pink1") 
+  
+
+p_2 <- ggplot(df, aes(Log.GDP.Per.Capita, Positive.Affect)) + 
+  geom_point(colour = "lightblue") 
+  
+
+p_3 <- ggplot(df, aes(Social.Support, Positive.Affect)) + 
+  geom_point(colour = "thistle2") 
+
+p_4 <- ggplot(df, aes(Freedom.To.Make.Life.Choices, Positive.Affect)) + 
+  geom_point(colour = "lightcoral") 
+
+# Create a simple grid
+p <- plot_grid(p_1, p_2,p_3, p_4, align = 'hv')
+
+# Default font size and position
+p + draw_figure_label(label = "Figure 1")
+
+# Different position and font size
+p + draw_figure_label(label = "Figure 1", position = "bottom.right", size = 10, )
+
+# Using bold font face
+p + draw_figure_label(label = "Figure 1", fontface = "bold")
+
+# Making the label red and slanted
+p + draw_figure_label(label = "Figure 1", angle = -45, colour = "red")
+
+# Labeling an individual plot
+ggdraw(p2) + draw_figure_label(label = "Figure 1", position = "bottom.right", size = 10) 
+
+```
+
+
+Case 5) Drawing a subplot
+
+```{r}
+# make a plot
+p <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+geom_point()
+# draw into the top-right corner of a larger plot area
+ggdraw() + draw_plot(p, .6, .6, .4, .4)
+
+# Combining with ggplot
+# create the first plot
+plot1 <- ggplot(df, aes(Life.Ladder, Positive.Affect)) +
+  geom_point(colour = "darkseagreen3") +
+  theme_half_open() +
+  background_grid()
+
+# create the second plot
+plot2 <- ggplot(data.frame(x = 1:3, y = 1:3), aes(x, y)) +
+  geom_point()
+
+# draw the second plot as an inset
+inset_plot <- ggdraw() + draw_plot(plot2, .6, .6, .4, .4)
+
+# combine the plots using plot_grid
+combined_plot <- plot_grid(plot1, inset_plot, ncol = 2)
+
+# display the combined plot
+combined_plot
+```
+
+
+Case 6) Combining images and plots
+
+```{r}
+# Plot 1: Basic plot
+plot <- ggplot(data, aes(x = `Log.GDP.Per.Capita`, y = `Life.Ladder`, color = `Regional.Indicator`)) +
+  geom_point() +
+  labs(x = "Log GDP Per Capita", y = "Life Ladder") +
+  labs(title = "Life Ladder vs. Log GDP Per Capita") +
+  theme_half_open(12)
+
+plot
+
+# Plot 2: Adding an image
+plot_img <- ggdraw() +
+  draw_image("people.jpg",
+             scale = .3, 
+             x = 1,
+             hjust = 1, 
+             halign = 0.82, 
+             valign = 0.05)+
+  draw_plot(plot)
+
+plot_img
+
+# Adding image as background 
+plot_background <- ggdraw() +
+  draw_image("world.jpg", 
+             scale = .7,
+             x = 0,
+             y = 0,
+             halign = 0.25) +
+  draw_plot(plot_img)
+
+plot_background
+
+```
+
+
+Case  7) Drawing images on plots 
+
+```{r}
+
+# create grobs
+circle_grob_high <- circleGrob(x = 0.5, y = 0.5, r = 0.2, gp = gpar(fill = "lightblue"))
+circle_grob_low <- circleGrob(x = 0.5, y = 0.5, r = 0.2, gp = gpar(fill = "pink"))
+txt_grob_low <- textGrob("low", gp = gpar(fontsize = 14))
+txt_grob_high <- textGrob("high", gp = gpar(fontsize = 14))
+
+# place into the middle of the plotting area, at a scale of 50%
+grob_plot <- ggdraw() + 
+  draw_grob(circle_grob_high, 
+            x = 1, 
+            hjust = 1, 
+            halign = 0.8, 
+            valign = 2.85,
+            scale = 0.9)+
+  draw_grob(circle_grob_low,             
+            x = 1, 
+            hjust = 1, 
+            halign = -2, 
+            valign = -0.5,
+            scale = 0.9)+
+  draw_grob(txt_grob_high,
+            x = 1, 
+            hjust = 1, 
+            halign = 0.8, 
+            valign = 1.35,
+            scale = 0.9)+
+  draw_grob(txt_grob_low,
+            x = 1, 
+            hjust = 1, 
+            halign = -2, 
+            valign = -2,
+            scale = 0.9)+
+  draw_plot(plot)
+
+grob_plot
+
+# Make Plot
+plot_other <- ggplot(data, aes(x = `Social.Support`, y = `Life.Ladder`)) +
+  geom_point() +
+  labs(x = "Social Support", y = "Life Ladder") +
+  theme_half_open(12)
+
+# Convert plot to grob
+grob_of_plot <- as_grob(plot_other)
+
+# Add plot grob to plot
+plot_plus_grobplot <- ggdraw() + 
+  draw_grob(grob_of_plot,
+            scale = 0.31,
+            halign = 0.075, 
+            valign = 0.95)+
+  draw_plot(grob_plot)
+
+plot_plus_grobplot
+
+ggsave("grob_plot_obj.jpg", plot = plot_plus_grobplot, dpi = 300)
+
+```
+
+Case 8) Aligning plots
+
+```{r}
+aligned_plots <- align_plots(plot, 
+                             plot_other, 
+                             align = "hv", 
+                             axis = "tblr")
+
+gg_align <- ggdraw(aligned_plots[[1]]) + draw_plot(aligned_plots[[2]])
+gg_align
+ggsave("align.jpg", plot = gg_align, dpi = 300)
+```
